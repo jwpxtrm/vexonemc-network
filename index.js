@@ -2,7 +2,6 @@ import {
   Client, 
   GatewayIntentBits, 
   Partials, 
-  TextChannel, 
   EmbedBuilder, 
   ActionRowBuilder, 
   ButtonBuilder, 
@@ -12,9 +11,7 @@ import {
   StringSelectMenuBuilder, 
   ModalBuilder, 
   TextInputBuilder, 
-  TextInputStyle,
-  CategoryChannel,
-  AttachmentBuilder
+  TextInputStyle 
 } from "discord.js";
 import express from "express";
 
@@ -90,7 +87,7 @@ client.on("guildMemberAdd", async (member) => {
     invitesCache.set(guild.id, guildInvites);
 
     if (welcomeChannel) {
-      const welcomeText = `# __BIENVENIDO A VEXONeMC NETWORK__\n\n¡Bienvenid@ ${member.toString()} a **VexoneMc Network**! Gracias por unirte al servidor.\n\n> Ve a <#1499823398317195455> para las reglas.\n> Abre un ticket en <#1499837719004577973> si necesitas ayuda.\n\n**IP Java:** \`VexoneMC.aternos.me\`\n**IP Bedrock:** \`VexoneMC.aternos.me\` : \`25704\``;
+      const welcomeText = `# __BIENVENIDO A VEXONeMC NETWORK__\n\n¡Bienvenid@ ${member.toString()} a **VexoneMc Network**! Gracias por unirte.\n\n> Ve a <#1499823398317195455> para las reglas.\n> Abre un ticket en <#1499837719004577973> si necesitas ayuda.\n\n**IP Java:** \`VexoneMC.aternos.me\`\n**IP Bedrock:** \`VexoneMC.aternos.me\` : \`25704\``;
       await welcomeChannel.send({ content: welcomeText });
     }
 
@@ -156,7 +153,7 @@ function isTicketChannel(channel) {
   return channel.name.startsWith("ticket-");
 }
 
-async function closeTicket(channel, executorTag) {
+async function closeTicket(channel) {
   try {
     await channel.send("🔒 Este canal se cerrará en 5 segundos...");
     setTimeout(async () => {
@@ -183,7 +180,7 @@ client.on("interactionCreate", async (interaction) => {
       const channel = interaction.channel;
       if (!channel || !isTicketChannel(channel)) return await interaction.reply({ content: "Usa esto en un canal de tickets.", ephemeral: true });
       await interaction.reply({ content: "⏳ Cerrando ticket...", ephemeral: true });
-      return await closeTicket(channel, interaction.user.tag);
+      return await closeTicket(channel);
     }
 
     if (interaction.commandName === "ip") {
@@ -273,7 +270,7 @@ client.on("interactionCreate", async (interaction) => {
     const channel = interaction.channel;
     if (!channel || !isTicketChannel(channel)) return;
     await interaction.reply({ content: "⏳ Cerrando ticket..." });
-    await closeTicket(channel, interaction.user.tag);
+    await closeTicket(channel);
   }
 });
 
