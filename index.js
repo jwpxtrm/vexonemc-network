@@ -50,16 +50,16 @@ const rulesChannelId = "1499823398317195455";
 const ticketsChannelId = "1499837719004577973";
 
 // ID del rol Founder
-const founderRoleId = "1558704220465791007";
+const founderRoleId = "155574418617";
 
 // ID del rol del staff (ve los tickets, se le menciona y puede reclamar)
-const staffRoleId = "1558704312539021333";
+const staffRoleId = "155643562615";
 
 // OPCIONAL: si quieres, pon aquí los IDs exactos.
 // Si los dejas vacíos, el bot busca la categoría "tickets" y el canal
 // "transcript" (dentro de la categoría "transcript-private") por nombre.
-const ticketsCategoryId = "";
-const transcriptChannelId = "";
+const ticketsCategoryId = "1558872098796081316";
+const transcriptChannelId = "1558872496684535898";
 // ===================================================
 
 const invitesCache = new Map();
