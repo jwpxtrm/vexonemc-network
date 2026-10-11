@@ -18,6 +18,14 @@ import {
 } from "discord.js";
 import express from "express";
 
+// Capturar cualquier error oculto para que aparezca en los logs de Railway
+process.on('unhandledRejection', error => {
+  console.error('⚠️ Error no manejado (Unhandled Rejection):', error);
+});
+process.on('uncaughtException', error => {
+  console.error('⚠️ Excepción no capturada (Uncaught Exception):', error);
+});
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -547,12 +555,14 @@ if (!token) {
 
 client.login(token);
 
+// Servidor Express adaptado al puerto dinámico de Railway
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
   res.send("¡El bot está activo!");
 });
 
-app.listen(3000, () => {
-  console.log("Servidor web listo en el puerto 3000");
+app.listen(Number(PORT), "0.0.0.0", () => {
+  console.log(`Servidor web listo en el puerto ${PORT}`);
 });
