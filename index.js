@@ -39,14 +39,14 @@ const client = new Client({
 
 const welcomeChannelId = "1499822302454616075"; 
 const inviteChannelId = "1499931419277791293";   
-const invitesCache = new Map<string, Map<string, number>>();
+const invitesCache = new Map();
 
 client.on("ready", async () => {
   console.log(`¡Bot conectado como ${client.user?.tag}!`);
   for (const guild of client.guilds.cache.values()) {
     try {
       const firstInvites = await guild.invites.fetch();
-      const guildInvites = new Map<string, number>();
+      const guildInvites = new Map();
       firstInvites.forEach(invite => guildInvites.set(invite.code, invite.uses || 0));
       invitesCache.set(guild.id, guildInvites);
     } catch (error) {
@@ -57,7 +57,7 @@ client.on("ready", async () => {
 
 client.on("inviteCreate", async (invite) => {
   if (!invite.guild) return;
-  const guildInvites = invitesCache.get(invite.guild.id) || new Map<string, number>();
+  const guildInvites = invitesCache.get(invite.guild.id) || new Map();
   guildInvites.set(invite.code, invite.uses || 0);
   invitesCache.set(invite.guild.id, guildInvites);
 });
@@ -71,12 +71,12 @@ client.on("inviteDelete", async (invite) => {
 client.on("guildMemberAdd", async (member) => {
   try {
     const guild = member.guild;
-    const welcomeChannel = guild.channels.cache.get(welcomeChannelId) as TextChannel;
-    const inviteChannel = guild.channels.cache.get(inviteChannelId) as TextChannel;
+    const welcomeChannel = guild.channels.cache.get(welcomeChannelId);
+    const inviteChannel = guild.channels.cache.get(inviteChannelId);
 
-    const oldInvites = invitesCache.get(guild.id) || new Map<string, number>();
+    const oldInvites = invitesCache.get(guild.id) || new Map();
     const newInvites = await guild.invites.fetch();
-    let usedInvite: any = null;
+    let usedInvite = null;
 
     for (const [code, newInvite] of newInvites.entries()) {
       if ((newInvite.uses ?? 0) > (oldInvites.get(code) || 0)) {
@@ -85,7 +85,7 @@ client.on("guildMemberAdd", async (member) => {
       }
     }
 
-    const guildInvites = new Map<string, number>();
+    const guildInvites = new Map();
     newInvites.forEach(invite => guildInvites.set(invite.code, invite.uses || 0));
     invitesCache.set(guild.id, guildInvites);
 
@@ -145,11 +145,11 @@ function createTicketPanel() {
       { label: "Reporte de Bugs", description: "Informa sobre fallos del servidor", value: "reporte_bugs", emoji: "1541181053773815839" },
     ]);
 
-  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+  const row = new ActionRowBuilder().addComponents(selectMenu);
   return { embeds: [embed], components: [row] };
 }
 
-const modalFieldsConfig: Record<string, { label: string; style: TextInputStyle; required: boolean }[]> = {
+const modalFieldsConfig = {
   soporte: [
     { label: "Nick de Minecraft", style: TextInputStyle.Short, required: true },
     { label: "Modalidad", style: TextInputStyle.Short, required: true },
@@ -203,11 +203,11 @@ const modalFieldsConfig: Record<string, { label: string; style: TextInputStyle; 
   ]
 };
 
-function isTicketChannel(channel: TextChannel): boolean {
+function isTicketChannel(channel) {
   return channel.name.startsWith("ticket-");
 }
 
-async function closeTicket(channel: TextChannel, executorTag: string, ticketOwnerId?: string) {
+async function closeTicket(channel, executorTag, ticketOwnerId) {
   try {
     const guild = channel.guild;
     const messages = await channel.messages.fetch({ limit: 100 });
@@ -236,7 +236,7 @@ async function closeTicket(channel: TextChannel, executorTag: string, ticketOwne
 
     let ticketCategory = guild.channels.cache.find(
       c => c.name.toLowerCase() === "tickets usuarios" && c.type === ChannelType.GuildCategory
-    ) as CategoryChannel | undefined;
+    );
 
     if (!ticketCategory) {
       ticketCategory = await guild.channels.create({ name: "Tickets Usuarios", type: ChannelType.GuildCategory });
@@ -244,7 +244,7 @@ async function closeTicket(channel: TextChannel, executorTag: string, ticketOwne
 
     let transcriptsChannel = guild.channels.cache.find(
       c => c.name.toLowerCase() === "transcripts" && c.type === ChannelType.GuildText
-    ) as TextChannel | undefined;
+    );
 
     if (!transcriptsChannel) {
       transcriptsChannel = await guild.channels.create({
@@ -253,7 +253,7 @@ async function closeTicket(channel: TextChannel, executorTag: string, ticketOwne
         parent: ticketCategory.id,
         permissionOverwrites: [
           { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-          { id: client.user!.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+          { id: client.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
         ]
       });
     }
@@ -283,7 +283,7 @@ async function closeTicket(channel: TextChannel, executorTag: string, ticketOwne
             .setTimestamp()
             .setFooter({ text: "VexoneMc Network • Sistema de Soporte" });
 
-          const rowDm = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          const rowDm = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setLabel("Ver Transcript")
               .setStyle(ButtonStyle.Link)
@@ -318,13 +318,13 @@ client.on("interactionCreate", async (interaction) => {
         return await interaction.reply({ content: "No tienes permisos.", ephemeral: true });
       }
       await interaction.deferReply({ ephemeral: true });
-      const channel = interaction.channel as TextChannel;
+      const channel = interaction.channel;
       if (channel) await channel.send(createTicketPanel());
       return await interaction.editReply({ content: "Panel enviado con éxito." });
     }
 
     if (interaction.commandName === "close") {
-      const channel = interaction.channel as TextChannel;
+      const channel = interaction.channel;
       if (!channel || !isTicketChannel(channel)) return await interaction.reply({ content: "Usa esto en un canal de tickets.", ephemeral: true });
       await interaction.reply({ content: "⏳ Generando transcript y cerrando...", ephemeral: true });
       let ownerId = "";
@@ -343,7 +343,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (interaction.commandName === "rename") {
-      const channel = interaction.channel as TextChannel;
+      const channel = interaction.channel;
       if (!channel || !isTicketChannel(channel)) {
         return await interaction.reply({ content: "Usa este comando dentro de un canal de tickets.", ephemeral: true });
       }
@@ -395,7 +395,7 @@ client.on("interactionCreate", async (interaction) => {
         .setLabel(fieldData.label)
         .setStyle(fieldData.style)
         .setRequired(fieldData.required);
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(textInput));
+      modal.addComponents(new ActionRowBuilder().addComponents(textInput));
     });
 
     return await interaction.showModal(modal);
@@ -412,7 +412,7 @@ client.on("interactionCreate", async (interaction) => {
     try {
       let ticketCategory = guild.channels.cache.find(
         c => c.name.toLowerCase() === "tickets usuarios" && c.type === ChannelType.GuildCategory
-      ) as CategoryChannel | undefined;
+      );
 
       if (!ticketCategory) {
         ticketCategory = await guild.channels.create({ name: "Tickets Usuarios", type: ChannelType.GuildCategory });
@@ -456,7 +456,7 @@ client.on("interactionCreate", async (interaction) => {
         .setStyle(ButtonStyle.Success)
         .setEmoji("🙋‍♂️");
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(btnClaim, btnCerrar);
+      const row = new ActionRowBuilder().addComponents(btnClaim, btnCerrar);
 
       const staffRole = guild.roles.cache.find(r => r.name === "Staff-Team");
       const staffMention = staffRole ? `<@&${staffRole.id}>` : "@Staff-Team";
@@ -475,7 +475,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   if (interaction.isButton()) {
-    const channel = interaction.channel as TextChannel;
+    const channel = interaction.channel;
     if (!channel || !isTicketChannel(channel)) return;
 
     if (interaction.customId === "close_ticket_btn") {
@@ -491,7 +491,7 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.customId === "claim_ticket_btn") {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageMessages)) {
         const staffRole = interaction.guild?.roles.cache.find(r => r.name === "Staff-Team");
-        const hasRole = staffRole && (interaction.member?.roles as any)?.cache?.has(staffRole.id);
+        const hasRole = staffRole && interaction.member?.roles?.cache?.has(staffRole.id);
         if (!hasRole) {
           return await interaction.reply({ content: "❌ Solo lo puede usar el Staff.", ephemeral: true });
         }
@@ -526,7 +526,7 @@ client.on("interactionCreate", async (interaction) => {
 
         newEmbed.setFields(fields);
 
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("claim_ticket_btn")
             .setLabel(`Reclamado por ${interaction.user.username}`)
