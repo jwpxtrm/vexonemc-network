@@ -1,5 +1,5 @@
 {
-  "name": "vexonemc-bot",
+  "name": "vexonemc-network",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
