@@ -39,14 +39,14 @@ const client = new Client({
 
 const welcomeChannelId = "1499822302454616075"; 
 const inviteChannelId = "1499931419277791293";   
-const invitesCache = new Map<string, Map<string, number>>();
+const invitesCache = new Map();
 
 client.on("ready", async () => {
   console.log(`¡Bot conectado como ${client.user?.tag}!`);
   for (const guild of client.guilds.cache.values()) {
     try {
       const firstInvites = await guild.invites.fetch();
-      const guildInvites = new Map<string, number>();
+      const guildInvites = new Map();
       firstInvites.forEach(invite => guildInvites.set(invite.code, invite.uses || 0));
       invitesCache.set(guild.id, guildInvites);
     } catch (error) {
@@ -57,7 +57,7 @@ client.on("ready", async () => {
 
 client.on("inviteCreate", async (invite) => {
   if (!invite.guild) return;
-  const guildInvites = invitesCache.get(invite.guild.id) || new Map<string, number>();
+  const guildInvites = invitesCache.get(invite.guild.id) || new Map();
   guildInvites.set(invite.code, invite.uses || 0);
   invitesCache.set(invite.guild.id, guildInvites);
 });
@@ -71,12 +71,12 @@ client.on("inviteDelete", async (invite) => {
 client.on("guildMemberAdd", async (member) => {
   try {
     const guild = member.guild;
-    const welcomeChannel = guild.channels.cache.get(welcomeChannelId) as TextChannel;
-    const inviteChannel = guild.channels.cache.get(inviteChannelId) as TextChannel;
+    const welcomeChannel = guild.channels.cache.get(welcomeChannelId);
+    const inviteChannel = guild.channels.cache.get(inviteChannelId);
 
-    const oldInvites = invitesCache.get(guild.id) || new Map<string, number>();
+    const oldInvites = invitesCache.get(guild.id) || new Map();
     const newInvites = await guild.invites.fetch();
-    let usedInvite: any = null;
+    let usedInvite = null;
 
     for (const [code, newInvite] of newInvites.entries()) {
       if ((newInvite.uses ?? 0) > (oldInvites.get(code) || 0)) {
@@ -85,7 +85,7 @@ client.on("guildMemberAdd", async (member) => {
       }
     }
 
-    const guildInvites = new Map<string, number>();
+    const guildInvites = new Map();
     newInvites.forEach(invite => guildInvites.set(invite.code, invite.uses || 0));
     invitesCache.set(guild.id, guildInvites);
 
@@ -126,11 +126,11 @@ function createTicketPanel() {
       { label: "Reporte de Bugs", description: "Informa sobre fallos del servidor", value: "reporte_bugs" },
     ]);
 
-  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+  const row = new ActionRowBuilder().addComponents(selectMenu);
   return { embeds: [embed], components: [row] };
 }
 
-const modalFieldsConfig: Record<string, { label: string; style: TextInputStyle; required: boolean }[]> = {
+const modalFieldsConfig = {
   soporte: [
     { label: "Nick de Minecraft", style: TextInputStyle.Short, required: true },
     { label: "¿Cuál es tu problema?", style: TextInputStyle.Paragraph, required: true }
@@ -152,11 +152,11 @@ const modalFieldsConfig: Record<string, { label: string; style: TextInputStyle; 
   ]
 };
 
-function isTicketChannel(channel: TextChannel): boolean {
+function isTicketChannel(channel) {
   return channel.name.startsWith("ticket-");
 }
 
-async function closeTicket(channel: TextChannel, executorTag: string) {
+async function closeTicket(channel, executorTag) {
   try {
     await channel.send("🔒 Este canal se cerrará en 5 segundos...");
     setTimeout(async () => {
@@ -174,13 +174,13 @@ client.on("interactionCreate", async (interaction) => {
         return await interaction.reply({ content: "No tienes permisos.", ephemeral: true });
       }
       await interaction.deferReply({ ephemeral: true });
-      const channel = interaction.channel as TextChannel;
+      const channel = interaction.channel;
       if (channel) await channel.send(createTicketPanel());
       return await interaction.editReply({ content: "Panel enviado con éxito." });
     }
 
     if (interaction.commandName === "close") {
-      const channel = interaction.channel as TextChannel;
+      const channel = interaction.channel;
       if (!channel || !isTicketChannel(channel)) return await interaction.reply({ content: "Usa esto en un canal de tickets.", ephemeral: true });
       await interaction.reply({ content: "⏳ Cerrando ticket...", ephemeral: true });
       return await closeTicket(channel, interaction.user.tag);
@@ -210,7 +210,7 @@ client.on("interactionCreate", async (interaction) => {
         .setLabel(fieldData.label)
         .setStyle(fieldData.style)
         .setRequired(fieldData.required);
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(textInput));
+      modal.addComponents(new ActionRowBuilder().addComponents(textInput));
     });
 
     return await interaction.showModal(modal);
@@ -254,7 +254,7 @@ client.on("interactionCreate", async (interaction) => {
         .setStyle(ButtonStyle.Danger)
         .setEmoji("🔒");
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(btnCerrar);
+      const row = new ActionRowBuilder().addComponents(btnCerrar);
 
       await ticketChannel.send({
         content: `<@&1499837719004577973> | <@${interaction.user.id}> ¡Ticket creado con éxito!`,
@@ -270,7 +270,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   if (interaction.isButton() && interaction.customId === "close_ticket_btn") {
-    const channel = interaction.channel as TextChannel;
+    const channel = interaction.channel;
     if (!channel || !isTicketChannel(channel)) return;
     await interaction.reply({ content: "⏳ Cerrando ticket..." });
     await closeTicket(channel, interaction.user.tag);
