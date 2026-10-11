@@ -18,12 +18,12 @@ import {
 } from "discord.js";
 import express from "express";
 
-// Capturar cualquier error oculto para que aparezca en los logs de Railway
-process.on('unhandledRejection', error => {
-  console.error('⚠️ Error no manejado (Unhandled Rejection):', error);
+process.on("unhandledRejection", (error) => {
+  console.error("⚠️ Error no manejado (Unhandled Rejection):", error);
 });
-process.on('uncaughtException', error => {
-  console.error('⚠️ Excepción no capturada (Uncaught Exception):', error);
+
+process.on("uncaughtException", (error) => {
+  console.error("⚠️ Excepción no capturada (Uncaught Exception):", error);
 });
 
 const client = new Client({
@@ -555,7 +555,6 @@ if (!token) {
 
 client.login(token);
 
-// Servidor Express adaptado al puerto dinámico de Railway
 const app = express();
 const PORT = process.env.PORT || 3000;
 
