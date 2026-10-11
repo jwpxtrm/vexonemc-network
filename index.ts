@@ -350,7 +350,6 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // --- COMANDO /compra ---
     if (interaction.commandName === "compra") {
       const rank = interaction.options.getString("rank") || "No especificado";
       const usuario = interaction.options.getString("usuario") || interaction.user.username;
@@ -459,3 +458,101 @@ client.on("interactionCreate", async (interaction) => {
         embeds: [embed],
         components: [row],
       });
+
+      return await interaction.editReply({ content: `✅ ¡Ticket creado correctamente en <#${ticketChannel.id}>!` });
+    } catch (error) {
+      console.error(error);
+      return await interaction.editReply({ content: "❌ Ocurrió un error al crear el canal." });
+    }
+  }
+
+  if (interaction.isButton()) {
+    const channel = interaction.channel as TextChannel;
+    if (!channel || !isTicketChannel(channel)) return;
+
+    if (interaction.customId === "close_ticket_btn") {
+      let ownerId = "";
+      if (channel.topic && channel.topic.includes("owner:")) {
+        const match = channel.topic.match(/owner:(\d+)/);
+        if (match) ownerId = match[1];
+      }
+      await interaction.reply({ content: "⏳ Generando transcript y cerrando ticket..." });
+      await closeTicket(channel, interaction.user.tag, ownerId);
+    }
+
+    if (interaction.customId === "claim_ticket_btn") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageMessages)) {
+        const staffRole = interaction.guild?.roles.cache.find(r => r.name === "Staff-Team");
+        const hasRole = staffRole && (interaction.member?.roles as any)?.cache?.has(staffRole.id);
+        if (!hasRole) {
+          return await interaction.reply({ content: "❌ Solo lo puede usar el Staff.", ephemeral: true });
+        }
+      }
+
+      if (channel.topic && channel.topic.includes("claimed:true")) {
+        return await interaction.reply({ content: "⚠️ Este ticket ya ha sido reclamado.", ephemeral: true });
+      }
+
+      if (channel.topic) {
+        const newTopic = channel.topic.replace("claimed:false", "claimed:true");
+        await channel.setTopic(newTopic).catch(() => {});
+      }
+
+      const messages = await channel.messages.fetch({ limit: 10 });
+      const botMessage = messages.find(m => m.author.id === client.user?.id && m.embeds.length > 0 && m.components.length > 0);
+
+      if (botMessage) {
+        const oldEmbed = botMessage.embeds[0];
+        const newEmbed = EmbedBuilder.from(oldEmbed);
+
+        const fields = newEmbed.data.fields || [];
+        const stateFieldIndex = fields.findIndex(f => f.name === "Estado del Staff");
+        
+        const staffInfoVal = `🟢 Reclamado por <@${interaction.user.id}> (${interaction.user.tag})`;
+
+        if (stateFieldIndex !== -1) {
+          fields[stateFieldIndex].value = staffInfoVal;
+        } else {
+          fields.push({ name: "Estado del Staff", value: staffInfoVal, inline: false });
+        }
+
+        newEmbed.setFields(fields);
+
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId("claim_ticket_btn")
+            .setLabel(`Reclamado por ${interaction.user.username}`)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true)
+            .setEmoji("✅"),
+          new ButtonBuilder()
+            .setCustomId("close_ticket_btn")
+            .setLabel("Cerrar Ticket")
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("🔒")
+        );
+
+        await botMessage.edit({ embeds: [newEmbed], components: [row] }).catch(() => {});
+      }
+      return await interaction.reply({ content: `✅ Has reclamado este ticket exitosamente. **Staff a cargo:** <@${interaction.user.id}>`, ephemeral: true });
+    }
+  }
+});
+
+const token = process.env.DISCORD_TOKEN;
+
+if (!token) {
+  throw new Error("DISCORD_TOKEN no está configurado.");
+}
+
+client.login(token);
+
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("¡El bot está activo!");
+});
+
+app.listen(3000, () => {
+  console.log("Servidor web listo en el puerto 3000");
+});
