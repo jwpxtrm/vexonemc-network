@@ -36,15 +36,15 @@ const client = new Client({
 });
 
 // ================== CONFIGURACIÓN ==================
-const welcomeChannelId = "1499822302454616075";
-const inviteChannelId = "1499931419277791293";
+const welcomeChannelId = "1558703082001670196";
+const inviteChannelId = "1558703902512381972";
 
 // PON AQUÍ el ID del rol Founder (clic derecho al rol > Copiar ID)
-const founderRoleId = "PON_AQUI_EL_ID_DEL_ROL_FOUNDER";
+const founderRoleId = "1558704220465791007";
 
 // PON AQUÍ el ID del rol del staff (para que vea los tickets y se le mencione)
 // Si lo dejas vacío, el staff no se menciona ni se le da acceso extra.
-const staffRoleId = "";
+const staffRoleId = "1558704312539021333";
 // ===================================================
 
 const invitesCache = new Map();
